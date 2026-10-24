@@ -547,32 +547,6 @@ func (e *IBusBambooEngine) getWmClass() string {
 	return e.wmClasses
 }
 
-func (e *IBusBambooEngine) getLatestWmClass() string {
-	var wmClass string
-	switch introspector {
-	case IntrospectorGnome:
-		wmClass, _ = gnomeGetFocusWindowClass()
-	case IntrospectorWayland:
-		wmClass = wlAppId
-	case IntrospectorX11:
-		wmClass = x11GetFocusWindowClass()
-	case IntrospectorCommand:
-		wmClass = cmdGetFocusedWmClass()
-	case IntrospectorFifo:
-		wmClass = fifoGetLatestFocusWindowClass()
-	}
-
-	// fmt.Printf("FIFO: %s\n", fifoWmClass)
-	// fmt.Printf("WL: %s\n", wlAppId)
-	// fmt.Printf("X11: %s\n", x11GetFocusWindowClass())
-
-	if wmClass == "" {
-		wmClass = x11GetFocusWindowClass()
-	}
-	wmClass = strings.Replace(wmClass, "\"", "", -1)
-	return wmClass
-}
-
 func (e *IBusBambooEngine) checkInputMode(im int) bool {
 	return e.getInputMode() == im
 }

@@ -8,6 +8,7 @@ import (
 	"os/user"
 
 	"github.com/BambooEngine/bamboo-core"
+	"ibus-bamboo/introspectors"
 )
 
 const (
@@ -26,6 +27,8 @@ type Config struct {
 	Shortcuts              [10]uint32
 	DefaultInputMode       int
 	InputModeMapping       map[string]int
+	Introspector           introspectors.BambooIntrospector
+	IntrospectorCommand    string
 }
 
 func GetConfigDir(ngName string) string {
@@ -54,6 +57,8 @@ func DefaultCfg() Config {
 		Shortcuts:              [10]uint32{1, 126, 0, 0, 0, 0, 0, 0, 5, 117},
 		DefaultInputMode:       PreeditIM,
 		InputModeMapping:       map[string]int{},
+		Introspector:           introspectors.IntrospectorAuto,
+		IntrospectorCommand:    "",
 	}
 }
 
@@ -65,10 +70,25 @@ func LoadConfig(engineName string) *Config {
 		return &c
 	}
 
-	data, err := ioutil.ReadFile(GetConfigPath(engineName))
+	var configPath = GetConfigPath(engineName)
+	data, err := ioutil.ReadFile(configPath)
 	if err == nil {
 		json.Unmarshal(data, &c)
 	}
+
+	/// Show configuration that are loaded for debugging
+	fmt.Print("Configuration loaded\n")
+	fmt.Printf("Config: %s\n", configPath)
+	fmt.Printf("InputMethod: %s\n", c.InputMethod)
+	fmt.Printf("InputMethodDefinitions: %d definitions\n", len(c.InputMethodDefinitions))
+	fmt.Printf("OutputCharset: %s\n", c.OutputCharset)
+	fmt.Printf("Flags: %d\n", c.Flags)
+	fmt.Printf("IBflags: %d\n", c.IBflags)
+	fmt.Printf("Shortcuts: %v\n", c.Shortcuts)
+	fmt.Printf("DefaultInputMode: %d\n", c.DefaultInputMode)
+	fmt.Printf("InputModeMapping: %v\n", c.InputModeMapping)
+	fmt.Printf("Introspector: %v\n", c.Introspector)
+	fmt.Printf("IntrospectorCommand: %q\n", c.IntrospectorCommand)
 
 	return &c
 }

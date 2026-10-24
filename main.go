@@ -26,7 +26,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/BambooEngine/bamboo-core"
 	ibus "github.com/BambooEngine/goibus"
+	"ibus-bamboo/config"
+	"ibus-bamboo/introspectors"
 )
 
 const (
@@ -39,81 +42,86 @@ var version = flag.Bool("version", false, "Show version")
 var gui = flag.Bool("gui", false, "Show GUI")
 var isWayland = false
 var isGnome = false
-var useManualIntrospect = false
 var engineRef *IBusBambooEngine
+var introspector introspectors.BambooIntrospector
 
 func hasGnome(env string) bool {
 	return strings.Contains(strings.ToLower(os.Getenv(env)), "gnome")
 }
 
-type Introspector int
-
-const (
-	IntrospectorX11 Introspector = iota
-	IntrospectorGnome
-	IntrospectorWayland
-	IntrospectorFifo
-	IntrospectorCommand
-)
-
-var introspector = IntrospectorX11
-
-func guessIntrospector() Introspector {
-	if os.Getenv("BAMBOO_INTROSPECTOR_CMD") != "" {
-		return IntrospectorCommand
+// guessIntrospector picks an introspector from the running session.
+// GNOME is checked first: GNOME on Wayland does not implement the
+// wlr foreign toplevel protocol used by the Wayland introspector.
+func guessIntrospector() introspectors.BambooIntrospector {
+	if isGnome {
+		return introspectors.IntrospectorGnome
 	}
-	if os.Getenv("WAYLAND_DISPLAY") != "" {
-		return IntrospectorWayland
+	if isWayland {
+		return introspectors.IntrospectorWayland
 	}
-	if hasGnome("XDG_CURRENT_DESKTOP") || hasGnome("DESKTOP_SESSION") || hasGnome("GDMSESSION") {
-		return IntrospectorGnome
+	return introspectors.IntrospectorX11
+}
+
+func validateConfig(cfg *config.Config) error {
+	resolved, ok := introspectors.IntrospectorByName[string(cfg.Introspector)]
+	if !ok {
+		return fmt.Errorf("unknown introspector %q", cfg.Introspector)
 	}
-	return IntrospectorX11
+	cfg.Introspector = resolved
+	if cfg.Introspector == introspectors.IntrospectorCommand && cfg.IntrospectorCommand == "" {
+		return fmt.Errorf("introspector %q requires IntrospectorCommand", cfg.Introspector)
+	}
+	if _, ok := cfg.InputMethodDefinitions[cfg.InputMethod]; !ok {
+		return fmt.Errorf("unknown input method %q", cfg.InputMethod)
+	}
+	for _, cs := range bamboo.GetCharsetNames() {
+		if cs == cfg.OutputCharset {
+			return nil
+		}
+	}
+	return fmt.Errorf("unknown output charset %q", cfg.OutputCharset)
 }
 
 func main() {
-
-	/// Reading the introspector type
-	var forceIntrospector = os.Getenv("BAMBOO_INTROSPECTOR")
-	switch forceIntrospector {
-	case "wayland":
-		introspector = IntrospectorWayland
-	case "gnome":
-		introspector = IntrospectorGnome
-	case "x11":
-		introspector = IntrospectorX11
-	case "fifo":
-		introspector = IntrospectorFifo
-	case "command":
-		introspector = IntrospectorCommand
-	case "auto":
-		fallthrough
-	case "":
-		introspector = guessIntrospector()
-	default:
-		fmt.Printf("Warning, unknown introspector type (%s)\n", forceIntrospector)
-		introspector = guessIntrospector()
+	if os.Getenv("WAYLAND_DISPLAY") != "" {
+		isWayland = true
+	}
+	if hasGnome("XDG_CURRENT_DESKTOP") || hasGnome("DESKTOP_SESSION") || hasGnome("GDMSESSION") {
+		isGnome = true
 	}
 
-	fmt.Printf("Introspector: (%v)\n", introspector)
-
 	flag.Parse()
+
+	/// Print the version and exit
+	if *version {
+		fmt.Println(Version)
+		return
+	}
+
 	if *embedded {
 		os.Chdir(DataDir)
 	}
 
-	// Custom initialization for
-	// some of the introspector that requires it.
-	switch introspector {
-	case IntrospectorWayland:
-		go wlGetFocusWindowClass()
-	case IntrospectorFifo:
-		go fifoWatchInitialize()
-	}
+	// This should not be spawned here, now that we have multiple introspectors
+	// if isWayland && !isGnome {
+	// 	go introspectors.WlGetFocusWindowClass()
+	// }
 
-	if *version {
-		fmt.Println(Version)
-	} else if *embedded {
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+
+	cfg := config.LoadConfig(strings.ToLower(EngineName))
+	if err := validateConfig(cfg); err != nil {
+		log.Fatalf("Invalid config %s: %v", config.GetConfigPath(strings.ToLower(EngineName)), err)
+	}
+	if cfg.Introspector == introspectors.IntrospectorAuto {
+		cfg.Introspector = guessIntrospector()
+	}
+	introspector = cfg.Introspector
+	log.Printf("Using introspector: %s", introspector)
+	introspectors.BootstrapIntrospector(introspector, &cfg.IntrospectorCommand)
+
+	if *embedded {
+		log.Println("IbusBamboo running in embedded mode")
 		engine := GetIBusEngineCreator()
 		bus := ibus.NewBus()
 		bus.RequestName(ComponentName, 0)
@@ -123,7 +131,7 @@ func main() {
 
 		select {}
 	} else {
-		log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+		log.Println("IbusBamboo running in IBus mode")
 		bus := ibus.NewBus()
 		log.Println("Got Bus, Running Standalone")
 		component := &ibus.Component{

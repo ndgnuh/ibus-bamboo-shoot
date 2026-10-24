@@ -32,6 +32,7 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	"ibus-bamboo/config"
+	"ibus-bamboo/introspectors"
 	"ibus-bamboo/ui"
 )
 
@@ -110,7 +111,7 @@ func (e *IBusBambooEngine) ProcessKeyEvent(keyVal uint32, keyCode uint32, state 
 
 func (e *IBusBambooEngine) FocusIn() *dbus.Error {
 	log.Print("FocusIn.")
-	var latestWm = e.getLatestWmClass()
+	var latestWm = introspectors.GetLatestAppId(introspector)
 	e.checkWmClass(latestWm)
 	e.RegisterProperties(e.propList)
 	e.RequireSurroundingText()
