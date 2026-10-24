@@ -9,6 +9,7 @@ import (
 
 	"github.com/BambooEngine/bamboo-core"
 	"ibus-bamboo/introspectors"
+	"ibus-bamboo/types"
 )
 
 const (
@@ -17,19 +18,6 @@ const (
 	mactabFile       = "%s/ibus-%s.macro.text"
 	sampleMactabFile = "data/macro.tpl.txt"
 )
-
-type Config struct {
-	InputMethod            string
-	InputMethodDefinitions map[string]bamboo.InputMethodDefinition
-	OutputCharset          string
-	Flags                  uint
-	IBflags                uint
-	Shortcuts              [10]uint32
-	DefaultInputMode       int
-	InputModeMapping       map[string]int
-	Introspector           introspectors.BambooIntrospector
-	IntrospectorCommand    string
-}
 
 func GetConfigDir(ngName string) string {
 	u, err := user.Current()
@@ -47,8 +35,8 @@ func GetConfigPath(engineName string) string {
 	return fmt.Sprintf(configFile, GetConfigDir(engineName), engineName)
 }
 
-func DefaultCfg() Config {
-	return Config{
+func DefaultCfg() types.Config {
+	return types.Config{
 		InputMethod:            "Telex",
 		OutputCharset:          "Unicode",
 		InputMethodDefinitions: bamboo.GetInputMethodDefinitions(),
@@ -62,7 +50,7 @@ func DefaultCfg() Config {
 	}
 }
 
-func LoadConfig(engineName string) *Config {
+func LoadConfig(engineName string) *types.Config {
 	var c = DefaultCfg()
 	if engineName == "bamboous" {
 		c.DefaultInputMode = UsIM
@@ -93,7 +81,7 @@ func LoadConfig(engineName string) *Config {
 	return &c
 }
 
-func SaveConfig(c *Config, engineName string) {
+func SaveConfig(c *types.Config, engineName string) {
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return

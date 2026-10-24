@@ -1,15 +1,16 @@
 package introspectors
 
-import "strings"
+import (
+	"strings"
 
-type BambooIntrospector string
-type IntrospectorMode int
+	"ibus-bamboo/types"
+)
 
 const (
 	// The CurrentClientId state is stored in this module
 	// A subprocess will be spawn to watch over the currently
 	// active client
-	Reactive IntrospectorMode = iota
+	Reactive types.IntrospectorMode = iota
 
 	// The current client id will be retreived by IBus Bamboo
 	// when it is needed, by some kind of API. No subprocess is needed for this one.
@@ -17,14 +18,14 @@ const (
 )
 
 const (
-	IntrospectorAuto    BambooIntrospector = "auto"
-	IntrospectorX11     BambooIntrospector = "x11"
-	IntrospectorGnome   BambooIntrospector = "gnome"
-	IntrospectorWayland BambooIntrospector = "wayland"
-	IntrospectorCommand BambooIntrospector = "command"
+	IntrospectorAuto    types.BambooIntrospector = "auto"
+	IntrospectorX11     types.BambooIntrospector = "x11"
+	IntrospectorGnome   types.BambooIntrospector = "gnome"
+	IntrospectorWayland types.BambooIntrospector = "wayland"
+	IntrospectorCommand types.BambooIntrospector = "command"
 )
 
-var IntrospectorNames = map[BambooIntrospector]string{
+var IntrospectorNames = map[types.BambooIntrospector]string{
 	IntrospectorAuto:    "auto",
 	IntrospectorX11:     "x11",
 	IntrospectorGnome:   "gnome",
@@ -32,7 +33,7 @@ var IntrospectorNames = map[BambooIntrospector]string{
 	IntrospectorCommand: "command",
 }
 
-var IntrospectorByName = map[string]BambooIntrospector{
+var IntrospectorByName = map[string]types.BambooIntrospector{
 	"":        IntrospectorAuto,
 	"auto":    IntrospectorAuto,
 	"x11":     IntrospectorX11,
@@ -43,7 +44,7 @@ var IntrospectorByName = map[string]BambooIntrospector{
 
 // GetIntrospectorMode tells whether an introspector keeps the focused window
 // class up to date in the background (Reactive) or queries it on demand (Passive).
-func GetIntrospectorMode(introspector BambooIntrospector) IntrospectorMode {
+func GetIntrospectorMode(introspector types.BambooIntrospector) types.IntrospectorMode {
 	switch introspector {
 	case IntrospectorWayland:
 		// WlGetFocusWindowClass runs in a goroutine and keeps WlAppId updated
@@ -59,7 +60,7 @@ func GetIntrospectorMode(introspector BambooIntrospector) IntrospectorMode {
 // BootstrapIntrospector starts whatever background work an introspector needs
 // before the focused window class can be read from it.
 // cmd is the command run by IntrospectorCommand, nil if not configured.
-func BootstrapIntrospector(introspector BambooIntrospector, cmd *string) {
+func BootstrapIntrospector(introspector types.BambooIntrospector, cmd *string) {
 	switch introspector {
 	case IntrospectorWayland:
 		go WlGetFocusWindowClass()
@@ -72,7 +73,7 @@ func BootstrapIntrospector(introspector BambooIntrospector, cmd *string) {
 
 // GetLatestAppId returns the class of the currently focused window,
 // falling back to X11 when the introspector cannot tell.
-func GetLatestAppId(introspector BambooIntrospector) string {
+func GetLatestAppId(introspector types.BambooIntrospector) string {
 	var wmClass string
 	switch introspector {
 	case IntrospectorGnome:

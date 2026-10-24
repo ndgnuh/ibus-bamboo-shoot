@@ -30,6 +30,7 @@ import (
 	ibus "github.com/BambooEngine/goibus"
 	"ibus-bamboo/config"
 	"ibus-bamboo/introspectors"
+	"ibus-bamboo/types"
 )
 
 const (
@@ -43,7 +44,7 @@ var gui = flag.Bool("gui", false, "Show GUI")
 var isWayland = false
 var isGnome = false
 var engineRef *IBusBambooEngine
-var introspector introspectors.BambooIntrospector
+var introspector types.BambooIntrospector
 
 func hasGnome(env string) bool {
 	return strings.Contains(strings.ToLower(os.Getenv(env)), "gnome")
@@ -52,7 +53,7 @@ func hasGnome(env string) bool {
 // guessIntrospector picks an introspector from the running session.
 // GNOME is checked first: GNOME on Wayland does not implement the
 // wlr foreign toplevel protocol used by the Wayland introspector.
-func guessIntrospector() introspectors.BambooIntrospector {
+func guessIntrospector() types.BambooIntrospector {
 	if isGnome {
 		return introspectors.IntrospectorGnome
 	}
@@ -62,7 +63,7 @@ func guessIntrospector() introspectors.BambooIntrospector {
 	return introspectors.IntrospectorX11
 }
 
-func validateConfig(cfg *config.Config) error {
+func validateConfig(cfg *types.Config) error {
 	resolved, ok := introspectors.IntrospectorByName[string(cfg.Introspector)]
 	if !ok {
 		return fmt.Errorf("unknown introspector %q", cfg.Introspector)
