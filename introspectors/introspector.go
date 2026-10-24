@@ -1,6 +1,7 @@
 package introspectors
 
 import (
+	"os"
 	"strings"
 
 	"ibus-bamboo/types"
@@ -57,17 +58,37 @@ func GetIntrospectorMode(introspector types.BambooIntrospector) types.Introspect
 	}
 }
 
+func hasGnome(env string) bool {
+	return strings.Contains(strings.ToLower(os.Getenv(env)), "gnome")
+}
+
+// guessIntrospector picks an introspector from the running session.
+// GNOME is checked first: GNOME on Wayland does not implement the
+// wlr foreign toplevel protocol used by the Wayland introspector.
+func guessIntrospector() types.BambooIntrospector {
+	isWayland := os.Getenv("WAYLAND_DISPLAY") != ""
+	isGnome := hasGnome("XDG_CURRENT_DESKTOP") || hasGnome("DESKTOP_SESSION") || hasGnome("GDMSESSION")
+	if isGnome {
+		return IntrospectorGnome
+	}
+	if isWayland {
+		return IntrospectorWayland
+	}
+	return IntrospectorX11
+}
+
 // BootstrapIntrospector starts whatever background work an introspector needs
 // before the focused window class can be read from it.
-// cmd is the command run by IntrospectorCommand, nil if not configured.
-func BootstrapIntrospector(introspector types.BambooIntrospector, cmd *string) {
-	switch introspector {
+// IntrospectorAuto in cfg is replaced by the introspector guessed from the session.
+func BootstrapIntrospector(cfg *types.Config) {
+	if cfg.Introspector == IntrospectorAuto {
+		cfg.Introspector = guessIntrospector()
+	}
+	switch cfg.Introspector {
 	case IntrospectorWayland:
 		go WlGetFocusWindowClass()
 	case IntrospectorCommand:
-		if cmd != nil {
-			CmdSetIntrospectCommand(*cmd)
-		}
+		CmdSetIntrospectCommand(cfg.IntrospectorCommand)
 	}
 }
 

@@ -41,27 +41,8 @@ const (
 var embedded = flag.Bool("ibus", false, "Run the embedded ibus component")
 var version = flag.Bool("version", false, "Show version")
 var gui = flag.Bool("gui", false, "Show GUI")
-var isWayland = false
-var isGnome = false
 var engineRef *IBusBambooEngine
 var introspector types.BambooIntrospector
-
-func hasGnome(env string) bool {
-	return strings.Contains(strings.ToLower(os.Getenv(env)), "gnome")
-}
-
-// guessIntrospector picks an introspector from the running session.
-// GNOME is checked first: GNOME on Wayland does not implement the
-// wlr foreign toplevel protocol used by the Wayland introspector.
-func guessIntrospector() types.BambooIntrospector {
-	if isGnome {
-		return introspectors.IntrospectorGnome
-	}
-	if isWayland {
-		return introspectors.IntrospectorWayland
-	}
-	return introspectors.IntrospectorX11
-}
 
 func validateConfig(cfg *types.Config) error {
 	resolved, ok := introspectors.IntrospectorByName[string(cfg.Introspector)]
@@ -84,13 +65,6 @@ func validateConfig(cfg *types.Config) error {
 }
 
 func main() {
-	if os.Getenv("WAYLAND_DISPLAY") != "" {
-		isWayland = true
-	}
-	if hasGnome("XDG_CURRENT_DESKTOP") || hasGnome("DESKTOP_SESSION") || hasGnome("GDMSESSION") {
-		isGnome = true
-	}
-
 	flag.Parse()
 
 	/// Print the version and exit
@@ -103,23 +77,15 @@ func main() {
 		os.Chdir(DataDir)
 	}
 
-	// This should not be spawned here, now that we have multiple introspectors
-	// if isWayland && !isGnome {
-	// 	go introspectors.WlGetFocusWindowClass()
-	// }
-
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 
 	cfg := config.LoadConfig(strings.ToLower(EngineName))
 	if err := validateConfig(cfg); err != nil {
 		log.Fatalf("Invalid config %s: %v", config.GetConfigPath(strings.ToLower(EngineName)), err)
 	}
-	if cfg.Introspector == introspectors.IntrospectorAuto {
-		cfg.Introspector = guessIntrospector()
-	}
+	introspectors.BootstrapIntrospector(cfg)
 	introspector = cfg.Introspector
 	log.Printf("Using introspector: %s", introspector)
-	introspectors.BootstrapIntrospector(introspector, &cfg.IntrospectorCommand)
 
 	if *embedded {
 		log.Println("IbusBamboo running in embedded mode")

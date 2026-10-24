@@ -17,6 +17,7 @@
  *
  */
 
+// / This is public API for IBus, these functionalities has to be methods to work with IBus
 package main
 
 import (
