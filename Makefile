@@ -66,6 +66,7 @@ uninstall:
 
 
 src: clean config
+	rm -rf debian
 	tar -zcf $(DESTDIR)/$(tar_file) $(tar_options_src)
 	cp -f build/rpm/$(pkg_name).spec $(DESTDIR)/
 	cp -r build/deb debian
