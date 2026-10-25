@@ -83,6 +83,7 @@ rpm: clean
 	rpmbuild $(pkg_name).spec -ba
 
 deb: clean config
+	rm -rf debian
 	cp -r build/deb debian
 	dpkg-buildpackage
 	rm -rf debian
