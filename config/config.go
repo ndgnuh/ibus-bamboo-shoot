@@ -64,20 +64,6 @@ func LoadConfig(engineName string) *types.Config {
 		json.Unmarshal(data, &c)
 	}
 
-	/// Show configuration that are loaded for debugging
-	fmt.Print("Configuration loaded\n")
-	fmt.Printf("Config: %s\n", configPath)
-	fmt.Printf("InputMethod: %s\n", c.InputMethod)
-	fmt.Printf("InputMethodDefinitions: %d definitions\n", len(c.InputMethodDefinitions))
-	fmt.Printf("OutputCharset: %s\n", c.OutputCharset)
-	fmt.Printf("Flags: %d\n", c.Flags)
-	fmt.Printf("IBflags: %d\n", c.IBflags)
-	fmt.Printf("Shortcuts: %v\n", c.Shortcuts)
-	fmt.Printf("DefaultInputMode: %d\n", c.DefaultInputMode)
-	fmt.Printf("InputModeMapping: %v\n", c.InputModeMapping)
-	fmt.Printf("Introspector: %v\n", c.Introspector)
-	fmt.Printf("IntrospectorCommand: %q\n", c.IntrospectorCommand)
-
 	return &c
 }
 

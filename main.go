@@ -80,6 +80,21 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 
 	cfg := config.LoadConfig(strings.ToLower(EngineName))
+
+	/// Show configuration that are loaded for debugging
+	fmt.Print("Configuration loaded\n")
+	fmt.Printf("Config: %s\n", config.GetConfigPath(strings.ToLower(EngineName)))
+	fmt.Printf("InputMethod: %s\n", cfg.InputMethod)
+	fmt.Printf("InputMethodDefinitions: %d definitions\n", len(cfg.InputMethodDefinitions))
+	fmt.Printf("OutputCharset: %s\n", cfg.OutputCharset)
+	fmt.Printf("Flags: %d\n", cfg.Flags)
+	fmt.Printf("IBflags: %d\n", cfg.IBflags)
+	fmt.Printf("Shortcuts: %v\n", cfg.Shortcuts)
+	fmt.Printf("DefaultInputMode: %d\n", cfg.DefaultInputMode)
+	fmt.Printf("InputModeMapping: %v\n", cfg.InputModeMapping)
+	fmt.Printf("Introspector: %v\n", cfg.Introspector)
+	fmt.Printf("IntrospectorCommand: %q\n", cfg.IntrospectorCommand)
+
 	if err := validateConfig(cfg); err != nil {
 		log.Fatalf("Invalid config %s: %v", config.GetConfigPath(strings.ToLower(EngineName)), err)
 	}
