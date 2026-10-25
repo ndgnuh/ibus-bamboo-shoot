@@ -1,3 +1,11 @@
+ibus-bamboo (0.8.7) stable; urgency=medium
+
+  * A new configuration cli tool is added, it can be used to debug or work in
+    composition with other tools. `bamboo-cli` is installed to /usr/local/bin/.
+
+
+ -- Hung Nguyen Duc <ndgnuh99@gmail.com>  Sun, 25 Oct 2026 16:54:46 +0700
+
 ibus-bamboo (0.8.6) stable; urgency=medium
 
   * Add ability for custom introspector in the config. Users can now
