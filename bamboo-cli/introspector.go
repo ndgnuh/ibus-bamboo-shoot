@@ -8,8 +8,6 @@ import (
 	"ibus-bamboo/introspectors"
 )
 
-const engineName = "bamboo"
-
 var introspectorCommands []BambooCliCommand
 
 var introspectorHelpCommand = BambooCliCommand{

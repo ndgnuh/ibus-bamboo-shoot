@@ -5,6 +5,8 @@ import (
 	"os"
 )
 
+const engineName = "bamboo"
+
 var helpCommand = BambooCliCommand{
 	name: "help",
 	help: "Show this help message",
