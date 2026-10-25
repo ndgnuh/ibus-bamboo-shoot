@@ -1,7 +1,12 @@
-ibus-bamboo (0.8.7) stable; urgency=medium
+ibus-bamboo (0.9.0) stable; urgency=medium
 
   * A new configuration cli tool is added, it can be used to debug or work in
     composition with other tools. `bamboo-cli` is installed to /usr/local/bin/.
+  * Do note that this tool is (now) only for modifing the configuration. Since
+    it is a standalone tool, it cannot notify the currently running ibus-bamboo
+    engine instance to reload the config and change the configurion.
+  * To make the changes effective, switch to another engine and switch back or
+    restart ibus.
 
 
  -- Hung Nguyen Duc <ndgnuh99@gmail.com>  Sun, 25 Oct 2026 16:54:46 +0700
