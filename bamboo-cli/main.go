@@ -18,7 +18,7 @@ var commands []BambooCliCommand
 
 // Assigned in init to avoid an initialization cycle with helpCommand
 func init() {
-	commands = []BambooCliCommand{helpCommand, introspectorCommand}
+	commands = []BambooCliCommand{helpCommand, introspectorCommand, modeCommand}
 }
 
 func main() {
