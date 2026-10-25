@@ -125,19 +125,44 @@ var modeSetDefaultCommand = BambooCliCommand{
 	},
 }
 
+func modeSetHelp() error {
+	return fmt.Errorf(`usage:
+	mode set <app_id/wm_class> <mode>
+	mode set --focused <mode>`)
+}
+
 var modeSetCommand = BambooCliCommand{
 	name: "set",
-	help: "Set typing mode for an app id/wm_class (integer or short name)",
+	help: "Set typing mode for an app id/wm_class, or the focused app with --focused (integer or short name)",
 	dispatch: func(args []string) error {
-		if len(args) != 2 {
-			return fmt.Errorf("usage: mode set <app_id/wm_class> <mode>")
+		flags := flag.NewFlagSet("mode set", flag.ContinueOnError)
+		focused := flags.Bool("focused", false, "Use the app id/wm_class of the focused client")
+		if err := flags.Parse(args); err != nil {
+			return err
 		}
-		mode, err := parseMode(args[1])
+		args = flags.Args()
+		cfg := config.LoadConfig(engineName)
+		var appId string
+		if *focused {
+			if len(args) != 1 {
+				return modeSetHelp()
+			}
+			introspectors.BootstrapIntrospector(cfg)
+			appId = introspectors.GetLatestAppId(cfg.Introspector)
+			if appId == "" {
+				return fmt.Errorf("could not determine the focused app id/wm_class")
+			}
+		} else {
+			if len(args) != 2 {
+				return modeSetHelp()
+			}
+			appId = args[0]
+		}
+		mode, err := parseMode(args[len(args)-1])
 		if err != nil {
 			return err
 		}
-		cfg := config.LoadConfig(engineName)
-		cfg.InputModeMapping[args[0]] = mode
+		cfg.InputModeMapping[appId] = mode
 		config.SaveConfig(cfg, engineName)
 		fmt.Println(config.ImShortNames[mode])
 		return nil
