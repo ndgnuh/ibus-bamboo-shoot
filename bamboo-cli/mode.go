@@ -104,6 +104,25 @@ var modeSetDefaultCommand = BambooCliCommand{
 	},
 }
 
+var modeSetCommand = BambooCliCommand{
+	name: "set",
+	help: "Set typing mode for an app id/wm_class (integer or short name)",
+	dispatch: func(args []string) error {
+		if len(args) != 2 {
+			return fmt.Errorf("usage: mode set <app_id/wm_class> <mode>")
+		}
+		mode, err := parseMode(args[1])
+		if err != nil {
+			return err
+		}
+		cfg := config.LoadConfig(engineName)
+		cfg.InputModeMapping[args[0]] = mode
+		config.SaveConfig(cfg, engineName)
+		fmt.Println(config.ImShortNames[mode])
+		return nil
+	},
+}
+
 var modeCommand = BambooCliCommand{
 	name: "mode",
 	help: "Manage the typing mode",
@@ -133,5 +152,6 @@ func init() {
 		modeGetCommand,
 		modeGetDefaultCommand,
 		modeSetDefaultCommand,
+		modeSetCommand,
 	}
 }
