@@ -7,6 +7,9 @@ import (
 
 const engineName = "bamboo"
 
+// Set at build time with -ldflags "-X main.Version=..."
+var Version string
+
 var helpCommand = BambooCliCommand{
 	name: "help",
 	help: "Show this help message",
@@ -16,11 +19,20 @@ var helpCommand = BambooCliCommand{
 	},
 }
 
+var versionCommand = BambooCliCommand{
+	name: "version",
+	help: "Show ibus-bamboo version",
+	dispatch: func(args []string) error {
+		fmt.Printf("Ibus Bamboo %s\n", Version)
+		return nil
+	},
+}
+
 var commands []BambooCliCommand
 
 // Assigned in init to avoid an initialization cycle with helpCommand
 func init() {
-	commands = []BambooCliCommand{helpCommand, introspectorCommand, modeCommand}
+	commands = []BambooCliCommand{helpCommand, introspectorCommand, modeCommand, versionCommand}
 }
 
 func main() {
