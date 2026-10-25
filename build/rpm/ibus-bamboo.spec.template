@@ -42,6 +42,7 @@ make PREFIX=%{_prefix} DESTDIR=%{buildroot} install
 %{engine_share_dir}/*
 %{engine_lib_dir}/*
 %{ibus_comp_dir}/%{engine_name}.xml
+%{_prefix}/bin/bamboo-cli
 
 %clean
 cd ..
