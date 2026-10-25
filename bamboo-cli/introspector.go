@@ -124,10 +124,10 @@ func init() {
 	introspectorCommands = []BambooCliCommand{
 		introspectorHelpCommand,
 		introspectorListCommand,
-		introspectorSetCommand,
-		introspectorSetCommandCommand,
 		introspectorGetCommand,
+		introspectorSetCommand,
 		introspectorGetCommandCommand,
+		introspectorSetCommandCommand,
 		introspectorGetFocusedCommand,
 	}
 }

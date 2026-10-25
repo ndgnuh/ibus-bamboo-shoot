@@ -196,8 +196,8 @@ func init() {
 		modeHelpCommand,
 		modeListCommand,
 		modeGetCommand,
+		modeSetCommand,
 		modeGetDefaultCommand,
 		modeSetDefaultCommand,
-		modeSetCommand,
 	}
 }
