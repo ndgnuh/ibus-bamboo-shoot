@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"sort"
@@ -39,13 +41,32 @@ var modeHelpCommand = BambooCliCommand{
 
 var modeListCommand = BambooCliCommand{
 	name: "list",
-	help: "List all typing modes",
+	help: "List all typing modes (--json for JSON output)",
 	dispatch: func(args []string) error {
+		flags := flag.NewFlagSet("mode list", flag.ContinueOnError)
+		asJSON := flags.Bool("json", false, "Output as JSON")
+		if err := flags.Parse(args); err != nil {
+			return err
+		}
 		var modes []int
 		for mode := range config.ImLookupTable {
 			modes = append(modes, mode)
 		}
 		sort.Ints(modes)
+		if *asJSON {
+			type modeEntry struct {
+				Index       int    `json:"index"`
+				Name        string `json:"name"`
+				DisplayName string `json:"display_name"`
+			}
+			entries := []modeEntry{}
+			for _, mode := range modes {
+				entries = append(entries, modeEntry{mode, config.ImShortNames[mode], config.ImLookupTable[mode]})
+			}
+			enc := json.NewEncoder(os.Stdout)
+			enc.SetIndent("", "    ")
+			return enc.Encode(entries)
+		}
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 4, ' ', 0)
 		for _, mode := range modes {
 			fmt.Fprintf(w, "%d\t%s\t%s\n", mode, config.ImShortNames[mode], config.ImLookupTable[mode])
